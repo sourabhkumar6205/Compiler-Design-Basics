@@ -1,0 +1,99 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdlib.h>
+
+// List of keywords in C-like language
+char* keywords[] = {
+    "int", "if", "else", "while", "return", "for", "void", "break", "continue", "struct", "char", NULL
+};
+
+// Function to check if a string is a keyword
+int isKeyword(const char* str) {
+    for (int i = 0; keywords[i] != NULL; i++) {
+        if (strcmp(str, keywords[i]) == 0) {
+            return 1;  
+        }
+    }
+    return 0;  
+}
+
+// Function to check if a character is an operator
+int isOperator(char c) {
+    char operators[] = "+-*/%=<>!&|^~";
+    for (int i = 0; operators[i] != '\0'; i++) {
+        if (c == operators[i]) {
+            return 1; 
+        }
+    }
+    return 0;  
+}
+
+// Function to check if a character is part of an identifier
+int isIdentifierStart(char c) {
+    return (isalpha(c) || c == '_');  
+}
+
+int isIdentifierPart(char c) {
+    return (isalnum(c) || c == '_');  
+}
+
+// Function to read and process tokens from a file
+void analyzeFile(FILE* file) {
+    char token[100];  
+    int c, index = 0;
+
+    while ((c = fgetc(file)) != EOF) {
+        if (isspace(c)) {
+            continue;
+        }
+
+        if (isOperator(c)) {
+            printf("Operator: %c\n", c);
+            continue;
+        }
+
+        if (isIdentifierStart(c)) {
+            token[index++] = c;
+            while ((c = fgetc(file)) != EOF && isIdentifierPart(c)) {
+                token[index++] = c;
+            }
+            token[index] = '\0';  
+            if (isKeyword(token)) {
+                printf("Keyword: %s\n", token);
+            } else {
+                printf("Identifier: %s\n", token);
+            }
+            ungetc(c, file);  
+            index = 0;
+            continue;
+        }
+
+        if (isdigit(c)) {
+            token[index++] = c;
+            while ((c = fgetc(file)) != EOF && isdigit(c)) {
+                token[index++] = c;
+            }
+            token[index] = '\0';  
+            printf("Number: %s\n", token);
+            ungetc(c, file);  
+            index = 0;
+            continue;
+        }
+
+        printf("Unknown character: %c\n", c);
+    }
+}
+
+int main() {
+    FILE *file = fopen("input.c", "r");
+    if (!file) {
+        printf("Error opening file\n");
+        return 1;
+    }
+
+    analyzeFile(file);
+
+    fclose(file);
+    return 0;
+}
